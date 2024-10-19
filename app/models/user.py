@@ -37,5 +37,17 @@ class User(UserMixin, db.Model):
     def is_admin(self):
         return self.role.name == 'admin'
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'gender': self.gender,
+            'phone': self.phone,
+            'email': self.email,
+            'address': self.address,
+            'image': self.image,
+            'role': self.role.name if self.role else None
+        }
+
     def __repr__(self):
         return f'<User {self.name}>'

@@ -9,5 +9,11 @@ class Role(db.Model):
 
     users = db.relationship('User', back_populates='role', lazy='dynamic')
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+
     def __repr__(self):
         return f'<Role {self.name}>'

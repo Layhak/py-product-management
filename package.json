@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "postcss src/styles/tailwind.css -o static/css/tailwind.css --watch",
-    "build": "postcss src/styles/tailwind.css -o static/css/tailwind.css"
+    "dev": "postcss src/styles/tailwind.css -o app/static/css/tailwind.css --watch",
+    "build": "postcss src/styles/tailwind.css -o app/static/css/tailwind.css"
   },
   "keywords": [],
   "author": "",
