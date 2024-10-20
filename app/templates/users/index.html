@@ -3,7 +3,7 @@
 {% block title %}User List{% endblock %}
 
 {% block content %}
-    <div class="bg-gray-100 py-10">
+    <div id="user-app" class="bg-gray-100 py-10">
         <div class="mx-auto max-w-7xl">
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="sm:flex sm:items-center">
@@ -13,7 +13,7 @@
                             name, phone, email, and role.</p>
                     </div>
                     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                        <a href="{{ url_for('users.create') }}"
+                        <a href="#"
                            class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Add
                             user</a>
                     </div>
@@ -44,24 +44,27 @@
                                     </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 bg-white">
-                                    {% for user in users %}
-                                        <tr>
-                                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ user.name }}</td>
-                                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.phone }}</td>
-                                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.email }}</td>
-                                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ user.role.name }}</td>
-                                            <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                                <a href="{{ url_for('users.update', user_id=user.id) }}"
-                                                   class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                                <form action="{{ url_for('users.delete', user_id=user.id) }}"
-                                                      method="post" style="display:inline;">
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">
-                                                        Delete
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
+                                    <tr v-for="user in users" :key="user.id">
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                            [[ user.name ]]
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">[[ user.phone ]]
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">[[ user.email ]]
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">[[ user.role ]]
+                                        </td>
+                                        <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                            <a :href="`/users/${user.id}/update`"
+                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                            <form :action="`/users/${user.id}/delete`"
+                                                  method="post" style="display:inline;">
+                                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
                                     </tbody>
                                 </table>
                             </div>

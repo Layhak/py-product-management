@@ -4,14 +4,14 @@ from flask_login import login_required
 from app import db
 from app.models.role import Role
 from app.models.user import User
-from app.utils.decorators import admin_required, token_required
+from app.utils.decorators import admin_required
 
 user_bp = Blueprint('users', __name__)
 
 
 @user_bp.route('/api/users', methods=['GET'])
 @admin_required
-@token_required
+# @token_required
 def api_users():
     users = User.query.all()
     items = [user.to_dict() for user in users]
@@ -27,7 +27,7 @@ def users():
 
 @user_bp.route('/api/users', methods=['POST'])
 @admin_required
-@token_required
+# @token_required
 def api_create_user():
     data = request.json
     name = data.get('name')
@@ -47,6 +47,7 @@ def api_create_user():
 
 @user_bp.route('/api/users/<int:user_id>', methods=['PUT'])
 @admin_required
+# @token_required
 def api_update_user(user_id):
     user = User.query.get_or_404(user_id)
     data = request.json
@@ -66,6 +67,7 @@ def api_update_user(user_id):
 
 @user_bp.route('/api/users/<int:user_id>', methods=['DELETE'])
 @admin_required
+# @token_required
 def api_delete_user(user_id):
     user = User.query.get_or_404(user_id)
     db.session.delete(user)

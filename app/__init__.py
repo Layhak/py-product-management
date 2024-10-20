@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -33,5 +34,7 @@ def create_app():
     app.register_blueprint(user_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(home_bp)
+
+    CORS(app, supports_credentials=True)
 
     return app

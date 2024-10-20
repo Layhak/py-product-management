@@ -58,3 +58,4 @@ zopfli==0.2.3
 
 PyJWT~=2.9.0
 config~=0.5.1
+Flask-Cors~=5.0.0

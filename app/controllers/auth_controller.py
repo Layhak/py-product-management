@@ -1,7 +1,7 @@
 import datetime
 
 import jwt
-from flask import Blueprint, jsonify, request, current_app, render_template
+from flask import Blueprint, jsonify, request, current_app, render_template, make_response
 from flask_login import login_user, logout_user, login_required
 
 from app.forms import LoginForm
@@ -32,7 +32,7 @@ def api_login():
 
     user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
-        login_user(user)
+        login_user(user, remember=True)
 
         # Generate JWT token
         token = jwt.encode({
@@ -40,7 +40,16 @@ def api_login():
             'exp': datetime.datetime.now() + datetime.timedelta(hours=1)
         }, current_app.config['SECRET_KEY'], algorithm='HS256')
 
-        return jsonify({'message': 'Login successful.', 'token': token}), 200
+        response = make_response(jsonify({'message': 'Login successful.'}))
+        response.set_cookie(
+            'token',
+            token,
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite='Lax',
+            max_age=60 * 60 * 24 * 7  # 1 week
+        )
+        return response
     else:
         return jsonify({'error': 'Invalid email or password.'}), 401
 
@@ -48,5 +57,10 @@ def api_login():
 @auth_bp.route('/api/logout', methods=['POST'])
 @login_required
 def api_logout():
-    logout_user()
-    return jsonify({'message': 'Logout successful.'}), 200
+    logout_user()  # This will handle the Flask-Login session logout
+
+    # Create a response object and clear the token cookie
+    response = make_response(jsonify({'message': 'Logout successful.'}))
+    response.set_cookie('token', '', expires=0)  # Clear the token cookie by setting its expiration to the past
+
+    return response
