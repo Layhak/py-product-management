@@ -1,37 +1,33 @@
-from functools import wraps
-
-from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
+from flask import Blueprint, jsonify, request, render_template
+from flask_login import login_required
 
 from app import db
 from app.models.role import Role
 from app.models.user import User
+from app.utils.decorators import admin_required, token_required
 
 user_bp = Blueprint('users', __name__)
 
 
-def admin_required(f):
-    """Decorator to restrict access to admin users only."""
-
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin():
-            return jsonify({'error': 'You do not have permission to access this page.'}), 403
-        return f(*args, **kwargs)
-
-    return login_required(decorated_function)
-
-
 @user_bp.route('/api/users', methods=['GET'])
 @admin_required
+@token_required
 def api_users():
     users = User.query.all()
     items = [user.to_dict() for user in users]
     return jsonify(items), 200
 
 
+@user_bp.route('/users', methods=['GET'])
+@admin_required
+@login_required
+def users():
+    return render_template("users/index.html")
+
+
 @user_bp.route('/api/users', methods=['POST'])
 @admin_required
+@token_required
 def api_create_user():
     data = request.json
     name = data.get('name')
@@ -39,7 +35,6 @@ def api_create_user():
     password = data.get('password')
     role_id = data.get('role_id')
 
-    # Validate role_id to ensure it's a valid role
     if not Role.query.get(role_id):
         return jsonify({'error': 'Invalid role selected.'}), 400
 
@@ -59,7 +54,6 @@ def api_update_user(user_id):
     user.email = data.get('email', user.email)
     user.role_id = data.get('role_id', user.role_id)
 
-    # Validate role_id to ensure it's a valid role
     if not Role.query.get(user.role_id):
         return jsonify({'error': 'Invalid role selected.'}), 400
 
