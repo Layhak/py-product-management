@@ -3,6 +3,7 @@ import hashlib
 import os
 
 from flask_login import UserMixin
+from sqlalchemy.dialects.postgresql import JSON  # Import JSON type if using PostgreSQL
 
 from .. import db
 
@@ -17,6 +18,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     address = db.Column(db.String(200))
     image = db.Column(db.String(200))
+    previous_images = db.Column(JSON, default=[])  # New field for old images
     password_hash = db.Column(db.String(255))
     password_salt = db.Column(db.String(64))
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
@@ -46,6 +48,7 @@ class User(UserMixin, db.Model):
             'email': self.email,
             'address': self.address,
             'image': self.image,
+            'previous_images': self.previous_images,  # Include in dict
             'role': self.role.name if self.role else None
         }
 

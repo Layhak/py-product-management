@@ -1,4 +1,3 @@
-# app/seed/seed.py
 from app import create_app, db
 from app.models.role import Role
 from app.models.user import User
@@ -14,11 +13,13 @@ def seed_data():
             db.session.add(admin_role)
             db.session.add(user_role)
 
-            admin_user = User(name='Admin', email='admin@gmail.com', role=admin_role)
-            admin_user.set_password('adminpassword')
+            admin_user = User(name='Admin', gender='Male', phone="012345678", email='admin@gmail.com',
+                              address="Phnom Penh", role=admin_role)
+            admin_user.set_password('admin')
 
-            normal_user = User(name='Normal', email='user@gmail.com', role=user_role)
-            normal_user.set_password('userpassword')
+            normal_user = User(name='Normal', gender='Female', email='user@gmail.com', phone="012345677",
+                               address="Phnom Penh", role=user_role)
+            normal_user.set_password('normal')
 
             db.session.add(admin_user)
             db.session.add(normal_user)

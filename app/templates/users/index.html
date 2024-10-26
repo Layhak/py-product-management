@@ -13,9 +13,10 @@
                             name, phone, email, and role.</p>
                     </div>
                     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                        <a href="#"
-                           class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Add
-                            user</a>
+                        <button @click="openModal" type="button"
+                                class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">
+                            Add User
+                        </button>
                     </div>
                 </div>
                 <div class="mt-8 flow-root">
@@ -25,6 +26,10 @@
                                 <table class="min-w-full divide-y divide-gray-300">
                                     <thead class="bg-gray-50">
                                     <tr>
+                                        <th scope="col"
+                                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                                            Image
+                                        </th>
                                         <th scope="col"
                                             class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
                                             Name
@@ -38,13 +43,20 @@
                                         <th scope="col"
                                             class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role
                                         </th>
-                                        <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                            <span class="sr-only">Edit</span>
+                                        <th scope="col"
+                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Address
+                                        </th>
+                                        <th scope="col"
+                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Action
                                         </th>
                                     </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-200 bg-white">
                                     <tr v-for="user in users" :key="user.id">
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                            <img :src="'/static/uploads/'+user.image" alt="User Image"
+                                                 class="h-10 w-10 rounded-full">
+                                        </td>
                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                             [[ user.name ]]
                                         </td>
@@ -54,13 +66,15 @@
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">[[ user.role ]]
                                         </td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">[[ user.address
+                                            ]]
+                                        </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                             <a :href="`/users/${user.id}/update`"
                                                class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <form :action="`/users/${user.id}/delete`"
-                                                  method="post" style="display:inline;">
-                                                <button type="submit" class="text-red-600 hover:text-red-900">
-                                                    Delete
+                                            <form :action="`/users/${user.id}/delete`" method="post"
+                                                  style="display:inline;">
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete
                                                 </button>
                                             </form>
                                         </td>
@@ -69,6 +83,105 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main modal -->
+            <div v-if="isModalOpen" id="crud-modal" tabindex="-1" aria-hidden="true"
+                 class="fixed top-0 left-0 right-0 z-50 flex justify-center items-center w-full h-full bg-gray-900 bg-opacity-50"
+                 @click="handleOutsideClick">
+                <div class="relative p-4 w-full max-w-md max-h-full" @click.stop>
+                    <!-- Modal content -->
+                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                        <!-- Modal header -->
+                        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Create New User
+                            </h3>
+                            <button @click="closeModal" type="button"
+                                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                                <span class="sr-only">Close modal</span>
+                            </button>
+                        </div>
+                        <!-- Modal body -->
+                        <form @submit.prevent="createUser" class="p-4 md:p-5" enctype="multipart/form-data">
+                            <div class="grid gap-6 mb-6 md:grid-cols-2">
+                                <div>
+                                    <label for="first_name"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">First
+                                        name</label>
+                                    <input v-model="newUser.name"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           placeholder="John" type="text" id="name">
+                                </div>
+                                <div>
+                                    <label for="gender"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Gender</label>
+                                    <select v-model="newUser.gender"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            id="gender">
+                                        <option value="" disabled>Select gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="email"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                                    <input v-model="newUser.email" type="email" id="email"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           placeholder="John">
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="password"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                                    <input v-model="newUser.password"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           type="password" id="password">
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="phone"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
+                                    <input v-model="newUser.phone"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           type="text" id="phone">
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="address"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                                    <input v-model="newUser.address"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                           type="text" id="address">
+                                </div>
+                                <div class="col-span-2 sm:col-span-1">
+                                    <label for="role"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Role</label>
+                                    <select v-model="newUser.role_id"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            id="role">
+                                        <option value="" disabled>Select role</option>
+                                        <option value="1">Admin</option>
+                                        <option value="2">Normal User</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <label for="image"
+                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Upload
+                                        Image</label>
+                                    <input @change="handleImageUpload" type="file" id="image" accept="image/*"
+                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                </div>
+                            </div>
+                            <button type="submit"
+                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none">
+                                Create User
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

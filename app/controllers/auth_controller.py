@@ -4,8 +4,8 @@ import jwt
 from flask import Blueprint, jsonify, request, current_app, render_template, make_response
 from flask_login import login_user, logout_user, login_required
 
-from app.forms import LoginForm
 from app.models.user import User
+from app.validation.auth import LoginForm
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -40,7 +40,7 @@ def api_login():
             'exp': datetime.datetime.now() + datetime.timedelta(hours=1)
         }, current_app.config['SECRET_KEY'], algorithm='HS256')
 
-        response = make_response(jsonify({'message': 'Login successful.'}))
+        response = make_response(jsonify({'message': 'Login successful.', 'token': token}), 200)
         response.set_cookie(
             'token',
             token,
