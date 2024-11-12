@@ -13,7 +13,7 @@
                             name, phone, email, and role.</p>
                     </div>
                     <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                        <button @click="openModal" type="button"
+                        <button @click="openModal('create')" type="button"
                                 class="text-white bg-purple-700 hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-300 font-medium rounded-full text-sm px-5 py-2.5 text-center mb-2 dark:bg-purple-600 dark:hover:bg-purple-700 dark:focus:ring-purple-900">
                             Add User
                         </button>
@@ -54,8 +54,11 @@
                                     <tbody class="divide-y divide-gray-200 bg-white">
                                     <tr v-for="user in users" :key="user.id">
                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                            <img :src="'/static/uploads/'+user.image" alt="User Image"
+                                            <img :src="user.image ? '/static/uploads/' + user.image :
+                                                        'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.pngkey.com%2Fpng%2Ffull%2F73-730477_first-name-profile-image-placeholder-png.png&f=1&nofb=1&ipt=cd989d53c26c968500c4c1d3635e22213327b504a8f81d5829e6cf012413b0ce&ipo=images'"
+                                                 alt="User Image"
                                                  class="h-10 w-10 rounded-full">
+
                                         </td>
                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                             [[ user.name ]]
@@ -70,13 +73,12 @@
                                             ]]
                                         </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                            <a :href="`/users/${user.id}/update`"
-                                               class="text-indigo-600 hover:text-indigo-900">Edit</a>
-                                            <form :action="`/users/${user.id}/delete`" method="post"
-                                                  style="display:inline;">
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Delete
-                                                </button>
-                                            </form>
+                                            <button @click="openModal('edit', user)"
+                                                    class="text-indigo-600 hover:text-indigo-900">Edit
+                                            </button>
+                                            <button @click="openDeleteModal(user)"
+                                                    class="text-red-600 hover:text-red-900">Delete
+                                            </button>
                                         </td>
                                     </tr>
                                     </tbody>
@@ -86,17 +88,52 @@
                     </div>
                 </div>
             </div>
-            <!-- Main modal -->
+            <div v-if="isDeleteModalOpen" id="delete-modal" tabindex="-1" aria-hidden="true"
+                 class="fixed top-0 left-0 right-0 z-50 flex justify-center items-center w-full h-full bg-gray-900 bg-opacity-50"
+                 @click="closeDeleteModal">
+                <div class="relative p-4 w-full max-w-md" @click.stop>
+                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                        <div class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Confirm Deletion
+                            </h3>
+                            <button @click="closeDeleteModal" type="button"
+                                    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                     viewBox="0 0 14 14">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                          stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                </svg>
+                                <span class="sr-only">Close modal</span>
+                            </button>
+                        </div>
+                        <div class="p-4">
+                            <p class="text-sm text-gray-500 dark:text-gray-300">
+                                Are you sure you want to delete this user? This action cannot be undone.
+                            </p>
+                        </div>
+                        <div class="flex justify-end p-4 border-t">
+                            <button @click="closeDeleteModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">
+                                Cancel
+                            </button>
+                            <button @click="confirmDelete" class="bg-red-500 text-white px-4 py-2 rounded">Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Create/Edit -->
             <div v-if="isModalOpen" id="crud-modal" tabindex="-1" aria-hidden="true"
                  class="fixed top-0 left-0 right-0 z-50 flex justify-center items-center w-full h-full bg-gray-900 bg-opacity-50"
                  @click="handleOutsideClick">
-                <div class="relative p-4 w-full max-w-md max-h-full" @click.stop>
+                <div class="relative p-4 w-full max-w-3xl" @click.stop>
                     <!-- Modal content -->
-                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+                    <div class="relative bg-white rounded-lg shadow dark:bg-gray-700 max-h-[90vh] overflow-y-auto">
                         <!-- Modal header -->
                         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                Create New User
+                                [[ formMode === 'create' ? 'Create New User' : 'Edit User' ]]
                             </h3>
                             <button @click="closeModal" type="button"
                                     class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -109,20 +146,84 @@
                             </button>
                         </div>
                         <!-- Modal body -->
-                        <form @submit.prevent="createUser" class="p-4 md:p-5" enctype="multipart/form-data">
+                        <form @submit.prevent="saveUser" class="flex justify-center gap-5 w-full  p-4 md:p-5"
+                              enctype="multipart/form-data">
+                            <div>
+                                <label for="image"
+                                       class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Upload
+                                    Image</label>
+                                <div class="flex items-center flex-col gap-5 justify-center w-full">
+                                    <label for="dropzone-file"
+                                           class="flex flex-col items-center justify-center w-[300px] h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50  dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 ">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                                                 aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 20 16">
+                                                <path stroke="currentColor" stroke-linecap="round"
+                                                      stroke-linejoin="round" stroke-width="2"
+                                                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                            </svg>
+                                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span
+                                                    class="font-semibold">Click to upload</span> or drag and drop
+                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF
+                                                (MAX. 800x400px)</p>
+                                        </div>
+                                        <input id="dropzone-file" type="file" class="hidden" accept="image/*"
+                                               @change="handleImageUpload">
+                                    </label>
+                                    <div v-if="imagePreview"
+                                         class=" bottom-2 right-2 border border-gray-300 rounded-lg bg-white p-1 z-10">
+                                        <img :src="imagePreview" alt="Image Preview"
+                                             class="w-[300px] h-[300px] object-cover rounded cursor-pointer"
+                                             @click="openCropper"/>
+                                    </div>
+                                </div>
+                                <!-- Cropper Modal -->
+                                <div v-if="showCropper"
+                                     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                                    <div class="bg-white rounded-lg shadow-lg w-full max-w-lg">
+                                        <div class="flex justify-between items-center p-4 border-b">
+                                            <h3 class="text-lg font-semibold text-gray-900">Crop Image</h3>
+                                            <button @click="closeCropper" class="text-gray-400 hover:text-gray-600">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                     viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="p-4">
+                                            <div class="w-400 h-400">
+                                                <img id="cropper-image" :src="imagePreview" alt="Image to Crop"
+                                                     class="max-w-full max-h-full">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end p-4 border-t">
+                                            <button @click="closeCropper"
+                                                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">Cancel
+                                            </button>
+                                            <button @click="cropImage" class="bg-red-500 text-white px-4 py-2 rounded">
+                                                Crop
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                             <div class="grid gap-6 mb-6 md:grid-cols-2">
                                 <div>
-                                    <label for="first_name"
+                                    <label for="name"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">First
                                         name</label>
-                                    <input v-model="newUser.name"
+                                    <input v-model="currentUser.name"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            placeholder="John" type="text" id="name">
                                 </div>
                                 <div>
                                     <label for="gender"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Gender</label>
-                                    <select v-model="newUser.gender"
+                                    <select v-model="currentUser.gender"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                             id="gender">
                                         <option value="" disabled>Select gender</option>
@@ -133,54 +234,54 @@
                                 <div class="col-span-2">
                                     <label for="email"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
-                                    <input v-model="newUser.email" type="email" id="email"
+                                    <input v-model="currentUser.email" type="email" id="email"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            placeholder="John">
                                 </div>
-                                <div class="col-span-2">
+                                <div v-if="formMode === 'create'" class="col-span-2">
                                     <label for="password"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-                                    <input v-model="newUser.password"
+                                    <input v-model="currentUser.password"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            type="password" id="password">
                                 </div>
                                 <div class="col-span-2">
                                     <label for="phone"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
-                                    <input v-model="newUser.phone"
+                                    <input v-model="currentUser.phone"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            type="text" id="phone">
                                 </div>
                                 <div class="col-span-2">
                                     <label for="address"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
-                                    <input v-model="newUser.address"
+                                    <input v-model="currentUser.address"
                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                            type="text" id="address">
                                 </div>
+
                                 <div class="col-span-2 sm:col-span-1">
                                     <label for="role"
                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Role</label>
-                                    <select v-model="newUser.role_id"
+                                    <select v-model="currentUser.role_id"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                             id="role">
                                         <option value="" disabled>Select role</option>
-                                        <option value="1">Admin</option>
-                                        <option value="2">Normal User</option>
+                                        <option v-for="role in roles" :key="role.id" :value="role.id">
+                                            [[ role.name ]]
+                                        </option>
                                     </select>
                                 </div>
+
+
                                 <div class="col-span-2">
-                                    <label for="image"
-                                           class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Upload
-                                        Image</label>
-                                    <input @change="handleImageUpload" type="file" id="image" accept="image/*"
-                                           class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    <button type="submit"
+                                            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                        [[ formMode === 'create' ? 'Create User' : 'Update User' ]]
+                                    </button>
                                 </div>
                             </div>
-                            <button type="submit"
-                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none">
-                                Create User
-                            </button>
+
                         </form>
                     </div>
                 </div>

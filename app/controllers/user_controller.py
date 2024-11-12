@@ -38,10 +38,16 @@ def api_users():
 
 
 @user_bp.route('/users', methods=['GET'])
-@admin_required
 @login_required
 def users():
-    return render_template("users/index.html")
+    users = User.query.all()
+    roles = Role.query.all()
+
+    # Convert users and roles to dictionaries
+    users_list = [user.to_dict() for user in users]
+    roles_list = [role.to_dict() for role in roles]
+
+    return render_template("users/index.html", users=users_list, roles=roles_list)
 
 
 @user_bp.route('/api/users', methods=['POST'])
@@ -77,7 +83,7 @@ def api_create_user():
 @admin_required
 def api_update_user(user_id):
     user = User.query.get_or_404(user_id)
-    data = request.json
+    data = request.form  # Use request.form to handle form data
     user.name = data.get('name', user.name)
     user.email = data.get('email', user.email)
     user.role_id = data.get('role_id', user.role_id)
@@ -95,8 +101,8 @@ def api_update_user(user_id):
         filename = save_image(file, user.name)
         if filename:
             user.image = filename
-            db.session.commit()
 
+    db.session.commit()
     return jsonify({'message': 'User updated successfully.'}), 200
 
 

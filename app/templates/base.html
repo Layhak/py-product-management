@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Application{% endblock %}</title>
     <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 </head>
 <body>
 
@@ -211,15 +214,24 @@
                 sidebarOpen: false,
                 profileDropdownOpen: false,
                 isModalOpen: false,
-                newUser: {
+                formMode: 'create', // 'create' or 'edit'
+                currentUser: {
+                    id: null,
                     name: '',
                     gender: '',
                     phone: '',
                     email: '',
                     address: '',
-                    role_id: ''
+                    role_id: '',
+                    image: null
                 },
-                users: []
+                users: {{ users|tojson }}, // Pass users from server
+                roles: {{ roles|tojson }}, // Pass roles from server
+                imagePreview: null,
+                showCropper: false,
+                cropper: null,
+                userToDelete: null, // Track user to delete
+                isDeleteModalOpen: false,
             };
         },
         mounted() {
@@ -227,8 +239,6 @@
                 alert('Login successful!');
                 localStorage.removeItem('login');
             }
-
-            this.fetchUsers();
         },
         methods: {
             toggleSidebar() {
@@ -248,12 +258,41 @@
                         console.error('Logout error:', error);
                     });
             },
-            openModal() {
+            openDeleteModal(user) {
+                this.userToDelete = user;
+                this.isDeleteModalOpen = true;
+            },
+            closeDeleteModal() {
+                this.isDeleteModalOpen = false;
+                this.userToDelete = null;
+            },
+            confirmDelete() {
+                if (this.userToDelete) {
+                    axios.delete(`/api/users/${this.userToDelete.id}`)
+                        .then(response => {
+                            this.users = this.users.filter(user => user.id !== this.userToDelete.id);
+                            alert('User deleted successfully!');
+                            this.closeDeleteModal();
+                        })
+                        .catch(error => {
+                            console.error('Error deleting user:', error);
+                        });
+                }
+            },
+            openModal(mode, user = null) {
+                this.formMode = mode;
+                if (mode === 'edit' && user) {
+                    this.currentUser = {...user};
+                    this.currentUser.role_id = user.role_id;
+                    this.imagePreview = user.image ? `/static/uploads/${user.image}` : null;
+                } else {
+                    this.resetCurrentUser();
+                }
                 this.isModalOpen = true;
             },
             closeModal() {
                 this.isModalOpen = false;
-                this.resetNewUser(); // Reset form data including the image
+                this.resetCurrentUser(); // Reset form data including the image
             },
             handleOutsideClick(event) {
                 if (event.target.id === 'crud-modal') {
@@ -263,46 +302,85 @@
                     this.sidebarOpen = false;
                 }
             },
-            fetchUsers() {
-                axios.get('/api/users', {
-                    withCredentials: true
-                })
-                    .then(response => {
-                        this.users = response.data;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching users:', error);
-                    });
-            },
             handleImageUpload(event) {
                 const file = event.target.files[0];
                 if (file) {
-                    this.newUser.image = file; // Store the file in memory
+                    this.currentUser.image = file;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.imagePreview = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
                 }
             },
-            createUser() {
+            openCropper() {
+                this.showCropper = true;
+                this.$nextTick(() => {
+                    const imageElement = document.getElementById('cropper-image');
+                    this.cropper = new Cropper(imageElement, {
+                        aspectRatio: 1, // Adjust as needed
+                        viewMode: 1,
+                    });
+                });
+            },
+            closeCropper() {
+                if (this.cropper) {
+                    this.cropper.destroy();
+                    this.cropper = null;
+                }
+                this.showCropper = false;
+            },
+            cropImage() {
+                if (this.cropper) {
+                    const canvas = this.cropper.getCroppedCanvas();
+                    this.imagePreview = canvas.toDataURL(); // Update preview with cropped image
+
+                    // Convert canvas to a Blob
+                    canvas.toBlob((blob) => {
+                        this.currentUser.image = blob; // Store the blob for upload
+                    }, 'image/jpeg'); // Adjust the format and quality if needed
+
+                    this.closeCropper();
+                }
+            },
+
+            saveUser() {
                 const formData = new FormData();
-                for (const key in this.newUser) {
-                    formData.append(key, this.newUser[key]);
+                for (const key in this.currentUser) {
+                    formData.append(key, this.currentUser[key]);
                 }
 
-                axios.post('/api/users', formData, {
+                const url = this.formMode === 'create' ? '/api/users' : `/api/users/${this.currentUser.id}`;
+                const method = this.formMode === 'create' ? 'post' : 'put';
+
+                axios({
+                    method: method,
+                    url: url,
+                    data: formData,
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }
                 })
                     .then(response => {
-                        this.users.push(response.data);
+                        if (this.formMode === 'create') {
+                            this.users.push(response.data);
+                            alert('User created successfully!');
+                        } else {
+                            const index = this.users.findIndex(user => user.id === this.currentUser.id);
+                            this.users.splice(index, 1, response.data); // Update the user in the list
+                            window.location.reload(); // Reload the page
+                            alert('User updated successfully!');
+                        }
                         this.closeModal();
-                        alert('User created successfully!');
-                        this.resetNewUser();
                     })
                     .catch(error => {
-                        console.error('Error creating user:', error);
+                        console.error('Error saving user:', error);
                     });
             },
-            resetNewUser() {
-                this.newUser = {
+
+            resetCurrentUser() {
+                this.currentUser = {
+                    id: null,
                     name: '',
                     email: '',
                     password: '',
@@ -310,17 +388,13 @@
                     address: '',
                     gender: '',
                     role_id: '',
-                    image: null // Reset the image file
+                    image: null
                 };
-                const fileInput = document.getElementById('image');
+                this.imagePreview = null;
+                const fileInput = document.getElementById('dropzone-file');
                 if (fileInput) {
-                    fileInput.value = ''; // Clear the file input
+                    fileInput.value = '';
                 }
-            },
-            getCookie(name) {
-                const value = `; ${document.cookie}`;
-                const parts = value.split(`; ${name}=`);
-                if (parts.length === 2) return parts.pop().split(';').shift();
             }
         }
     }).mount('#app');
