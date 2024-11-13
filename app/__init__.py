@@ -12,7 +12,7 @@ login_manager = LoginManager()
 
 
 def create_app():
-    app = Flask(__name__, template_folder='templates')  # Ensure this points to the correct folder
+    app = Flask(__name__, template_folder='templates')
     app.config.from_object(Config)
 
     db.init_app(app)
@@ -30,10 +30,12 @@ def create_app():
     from app.controllers.user_controller import user_bp
     from app.controllers.auth_controller import auth_bp
     from app.controllers.home_controller import home_bp
+    from app.controllers.pos_controller import pos_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(home_bp)
+    app.register_blueprint(pos_bp)
 
     CORS(app, supports_credentials=True)
 

@@ -45,7 +45,7 @@ def api_login():
             'token',
             token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=False,
             samesite='Lax',
             max_age=60 * 60 * 24 * 7  # 1 week
         )

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Home</title>
+</head>
+<body>
+<div id="app">
+    <!-- Modal -->
+    <div v-if="isModalOpen" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h5 class="text-xl font-semibold">Add Customer</h5>
+                <button @click="isModalOpen = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div class="p-4">
+                <form>
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                        <input type="email" id="email"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <small class="text-gray-500">We'll never share your email with anyone else.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password"
+                               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="check" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="check" class="ml-2 block text-sm text-gray-900">Check me out</label>
+                    </div>
+                    <button type="submit"
+                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Submit
+                    </button>
+                </form>
+            </div>
+            <div class="flex justify-end p-4 border-t">
+                <button @click="isModalOpen = false" class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2">Close
+                </button>
+                <button class="bg-indigo-600 text-white px-4 py-2 rounded">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-600 p-4">
+        <div class="flex justify-between items-center">
+            <a href="https://clinic.phama-tech.com/admin" class="flex items-center">
+                <img src="https://i.pinimg.com/originals/6e/cb/91/6ecb91e73eab30f51b0b29a880338147.png"
+                     class="w-12 h-12 rounded-full">
+            </a>
+            <marquee class="text-white text-2xl font-light">
+                អ៊ុីឡាយលក់ចាប់ហួយ 🐣🐸🥬
+            </marquee>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto mt-4">
+        <div class="flex">
+            <!-- Product Section -->
+            <div class="w-1/2 pr-4">
+                <!-- Category Buttons -->
+                <div class="flex space-x-2 sticky top-0 bg-white shadow-md p-2">
+                    <button v-for="(item, index) in category_list" type="button"
+                            class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded uppercase">0
+                    </button>
+                </div>
+
+                <!-- Product Cards -->
+                <div class="grid grid-cols-3 gap-4 mt-4 overflow-y-auto" style="max-height: 85vh;">
+                    <div v-for="(item, index) in product_list" class="bg-white shadow rounded-lg p-4">
+                        <div class="relative">
+                            <img :src="item.image" class="w-full h-32 object-cover rounded-lg">
+                            <span class="absolute top-0 left-0 bg-green-500 text-white text-xs px-2 py-1 rounded-br-lg">[[ item.category ]]</span>
+                        </div>
+                        <div class="mt-2">
+                            <h5 class="text-lg font-semibold">[[ item.name ]]</h5>
+                            <p class="text-gray-700">[[ item.price ]] $</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sale List -->
+            <div class="w-1/2 pl-4">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="w-1/6 py-2">ល.រ</th>
+                        <th class="w-1/6 py-2">ការពិពណ៌នា</th>
+                        <th class="w-1/6 py-2">ចំនួន</th>
+                        <th class="w-1/6 py-2">តម្លៃលក់($)</th>
+                        <th class="w-1/6 py-2">បញ្ខុះតម្លៃ(%)</th>
+                        <th class="w-1/6 py-2">សរុប($)</th>
+                        <th class="w-1/6 py-2">សកម្មភាព</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center text-gray-500">no record...</td>
+                    </tr>
+                    <template>
+                        <tr>
+                            <td class="border-t py-2">1</td>
+                            <td class="border-t py-2">item.name</td>
+                            <td class="border-t py-2">
+                                <input type="number" class="w-16 text-center border border-gray-300 rounded"
+                                       @input="sound('click'), calculator">
+                            </td>
+                            <td class="border-t py-2">item.price</td>
+                            <td class="border-t py-2">0.0 %</td>
+                            <td class="border-t py-2">(item.qty * item.price).toLocaleString()</td>
+                            <td class="border-t py-2">
+                                <a href="#" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i> លុប
+                                </a>
+                            </td>
+                        </tr>
+                    </template>
+                    </tbody>
+                </table>
+
+                <div class="mt-4">
+                    <table class="w-full bg-white">
+                        <tr>
+                            <td class="text-right py-2">Total ($)</td>
+                            <td class="text-right py-2">[[ total.toLocaleString() ]] $</td>
+                        </tr>
+                        <tr>
+                            <td class="text-right py-2">Received amount ($)</td>
+                            <td class="text-right py-2">
+                                <input type="number" class="w-full border border-gray-300 rounded">
+                            </td>
+                        </tr>
+                        <tr v-if="received_amount > total">
+                            <td class="text-right py-2">
+                                <span class="bg-yellow-300 text-red-600 px-2 py-1 rounded">Change amount ($)</span>
+                            </td>
+                            <td class="text-right py-2">0</td>
+                        </tr>
+                    </table>
+
+                    <div class="flex space-x-2 mt-4">
+                        <button type="button" class="bg-red-500 text-white w-full py-2 rounded">Cancel</button>
+                        <button type="button" class="bg-green-500 text-white w-full py-2 rounded">Pay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var vue_obj = new Vue({
+        el: '#app',
+        delimiters: ['[[', ']]'],
+        data: {
+            product_list: [],
+            category_list: [],
+            isModalOpen: false,
+            total: 0,
+            received_amount: 0
+        },
+        methods: {}
+    });
+</script>
+</body>
+</html>

@@ -30,24 +30,25 @@ def upload_user_image(user_id):
 
 @user_bp.route('/api/users', methods=['GET'])
 @admin_required
-# @token_required
 def api_users():
     users = User.query.all()
     items = [user.to_dict() for user in users]
     return jsonify(items), 200
 
 
+@user_bp.route('/api/roles', methods=['GET'])
+@admin_required
+def api_roles():
+    roles = Role.query.all()
+    items = [role.to_dict() for role in roles]
+    return jsonify(items), 200
+
+
 @user_bp.route('/users', methods=['GET'])
+@admin_required
 @login_required
 def users():
-    users = User.query.all()
-    roles = Role.query.all()
-
-    # Convert users and roles to dictionaries
-    users_list = [user.to_dict() for user in users]
-    roles_list = [role.to_dict() for role in roles]
-
-    return render_template("users/index.html", users=users_list, roles=roles_list)
+    return render_template("users/index.html")
 
 
 @user_bp.route('/api/users', methods=['POST'])
