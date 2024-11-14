@@ -84,17 +84,21 @@ def api_create_user():
 @admin_required
 def api_update_user(user_id):
     user = User.query.get_or_404(user_id)
-    data = request.form  # Use request.form to handle form data
+    data = request.form  # Ensure this matches the data type sent from the client
     user.name = data.get('name', user.name)
     user.email = data.get('email', user.email)
+    user.phone = data.get('phone', user.phone)
     user.role_id = data.get('role_id', user.role_id)
 
+    # Check role validity
     if not Role.query.get(user.role_id):
         return jsonify({'error': 'Invalid role selected.'}), 400
 
+    # Update password if provided
     if 'password' in data and data['password']:
         user.set_password(data['password'])
 
+    # Handle image upload
     file = request.files.get('image')
     if file:
         if user.image:
