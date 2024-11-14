@@ -36,12 +36,14 @@ def create_app():
     from app.controllers.home_controller import home_bp
     from app.controllers.pos_controller import pos_bp
     from app.controllers.category_controller import category_bp
+    from app.controllers.product_controller import product_bp
 
     app.register_blueprint(user_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(home_bp)
     app.register_blueprint(pos_bp)
     app.register_blueprint(category_bp)
+    app.register_blueprint(product_bp)
 
     CORS(app, supports_credentials=True)
 

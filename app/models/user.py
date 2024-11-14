@@ -25,6 +25,7 @@ class User(UserMixin, db.Model):
 
     role = db.relationship('Role', back_populates='users')
     categories = db.relationship('Category', back_populates='user', cascade='all, delete-orphan')
+    products = db.relationship('Product', back_populates='user', cascade='all, delete-orphan')
 
     def set_password(self, password):
         salt = os.urandom(32)

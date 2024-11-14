@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from app import db
 from app.models.role import Role
@@ -10,6 +10,12 @@ from app.utils.file_utils import save_image
 user_bp = Blueprint('users', __name__)
 
 
+@user_bp.route('/api/current_user', methods=['GET'])
+@login_required
+def get_current_user():
+    return jsonify(current_user.to_dict()), 200
+
+
 @user_bp.route('/api/users/<int:user_id>/upload', methods=['POST'])
 def upload_user_image(user_id):
     user = User.query.get_or_404(user_id)
@@ -18,7 +24,7 @@ def upload_user_image(user_id):
     if not file:
         return jsonify({'error': 'No file provided.'}), 400
 
-    filename = save_image(file, user.name)
+    filename = save_image(file)  # Remove 'user.name' since 'save_image' now uses UUIDs
 
     if filename:
         user.image = filename  # Assuming you have an image field
@@ -71,7 +77,7 @@ def api_create_user():
     user.set_password(password)
 
     if image:
-        filename = save_image(image, user.name)
+        filename = save_image(image)
         user.image = filename
 
     db.session.add(user)
@@ -103,7 +109,7 @@ def api_update_user(user_id):
     if file:
         if user.image:
             user.previous_images.append(user.image)  # Append old image to previous_images
-        filename = save_image(file, user.name)
+        filename = save_image(file)  # Remove 'user.name' since 'save_image' now uses UUIDs
         if filename:
             user.image = filename
 

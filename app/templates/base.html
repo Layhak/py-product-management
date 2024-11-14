@@ -30,7 +30,7 @@
                 <!-- Sidebar component -->
                 <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4">
                     <div class="flex h-16 shrink-0 items-center">
-                        <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+                        <img class="h-8 w-auto" src="https://api.iconify.design/logos:arc.svg"
                              alt="Your Company">
                     </div>
                     <nav class="flex flex-1 flex-col">
@@ -64,7 +64,7 @@
     <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
         <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4">
             <div class="flex h-16 shrink-0 items-center">
-                <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+                <img class="h-8 w-auto" src="https://api.iconify.design/logos:arc.svg"
                      alt="Your Company">
             </div>
             <nav class="flex flex-1 flex-col">
@@ -138,16 +138,17 @@
                                     aria-expanded="false" aria-haspopup="true" @click="toggleProfileDropdown">
                                 <span class="sr-only">Open user menu</span>
                                 <img class="h-8 w-8 rounded-full bg-gray-50"
-                                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                     alt="">
+                                     :src="currentUser.image ? '/static/uploads/' + currentUser.image : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'"
+                                     alt="Profile Picture">
                                 <span class="hidden lg:flex lg:items-center">
-                  <span class="ml-4 text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">Tom Cook</span>
-                  <svg class="ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd"
-                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                          clip-rule="evenodd"/>
-                  </svg>
-                </span>
+            <span class="ml-4 text-sm font-semibold leading-6 text-gray-900"
+                  aria-hidden="true">[[ currentUser.name ]]</span>
+            <svg class="ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clip-rule="evenodd"/>
+            </svg>
+        </span>
                             </button>
 
                             <div v-if="profileDropdownOpen"
@@ -204,6 +205,11 @@
                         href: '/categories',
                         icon: 'M6.5 11L12 2l5.5 9zm11 11q-1.875 0-3.187-1.312T13 17.5t1.313-3.187T17.5 13t3.188 1.313T22 17.5t-1.312 3.188T17.5 22M3 21.5v-8h8v8z'
                     },
+                    {
+                        label: 'Product',
+                        href: '/products',
+                        icon: 'M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2m-8 4c0 .55-.45 1-1 1s-1-.45-1-1V8h2zm2-6c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2m4 6c0 .55-.45 1-1 1s-1-.45-1-1V8h2z'
+                    }
                 ],
                 currentUser: {
                     id: null,
@@ -230,19 +236,41 @@
                     category_name: '',
                     description: ''
                 },
+
+                products: [], // New state for products
+                currentProduct: {
+                    id: null,
+                    product_name: '',
+                    category_id: '',
+                    price: 0,
+                    qty: 0,
+                    image: null
+                },
                 errors: {} // Object to store validation errors
             };
+
         },
         mounted() {
             if (localStorage.getItem('login') === 'login') {
                 alert('Login successful!');
                 localStorage.removeItem('login');
             }
+            this.fetchCurrentUser();
             this.fetchUsers();
             this.fetchRoles();
-            this.fetchCategories(); // Fetch categories on mount
+            this.fetchCategories();
+            this.fetchProducts();
         },
         methods: {
+            fetchCurrentUser() {
+                axios.get('/api/current_user')
+                    .then(response => {
+                        this.currentUser = response.data;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching current user:', error);
+                    });
+            },
             fetchUsers() {
                 axios.get('/api/users')
                     .then(response => {
@@ -259,6 +287,24 @@
                     })
                     .catch(error => {
                         console.error('Error fetching roles:', error);
+                    });
+            },
+            fetchCategories() {
+                axios.get('/api/categories')
+                    .then(response => {
+                        this.categories = response.data;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching categories:', error);
+                    });
+            },
+            fetchProducts() {
+                axios.get('/api/products')
+                    .then(response => {
+                        this.products = response.data;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching products:', error);
                     });
             },
             toggleSidebar() {
@@ -302,20 +348,27 @@
                         });
                 }
             },
-            openModal(mode, user = null) {
+            openModal(mode, entity = null) {
                 this.formMode = mode;
-                if (mode === 'edit' && user) {
-                    this.currentUser = {...user};
-                    this.currentUser.role_id = user.role_id;
-                    this.imagePreview = user.image ? `/static/uploads/${user.image}` : null;
+                if (mode === 'edit' && entity) {
+                    if (entity.name) { // Check if it's a user
+                        this.currentUser = {...entity};
+                        this.currentUser.role_id = entity.role_id;
+                        this.imagePreview = entity.image ? `/static/uploads/${entity.image}` : null;
+                    } else if (entity.product_name) { // Check if it's a product
+                        this.currentProduct = {...entity};
+                        this.imagePreview = entity.image ? `/static/uploads/${entity.image}` : null;
+                    }
                 } else {
                     this.resetCurrentUser();
+                    this.resetCurrentProduct();
                 }
                 this.isModalOpen = true;
             },
             closeModal() {
                 this.isModalOpen = false;
                 this.resetCurrentUser();
+                this.resetCurrentProduct();
                 this.resetCurrentCategory();
             },
             handleOutsideClick(event) {
@@ -330,6 +383,7 @@
                 const file = event.target.files[0];
                 if (file) {
                     this.currentUser.image = file;
+                    this.currentProduct.image = file;
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         this.imagePreview = e.target.result;
@@ -337,6 +391,7 @@
                     reader.readAsDataURL(file);
                 }
             },
+
             openCropper() {
                 this.showCropper = true;
                 this.$nextTick(() => {
@@ -427,13 +482,48 @@
                         console.error('Error saving user:', error);
                     });
             },
-            fetchCategories() {
-                axios.get('/api/categories')
+            saveProduct() {
+                const formData = new FormData();
+                for (const key in this.currentProduct) {
+                    formData.append(key, this.currentProduct[key]);
+                }
+
+                const url = this.formMode === 'create' ? '/api/products' : `/api/products/${this.currentProduct.id}`;
+                const method = this.formMode === 'create' ? 'post' : 'put';
+
+                axios({
+                    method: method,
+                    url: url,
+                    data: formData,
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
                     .then(response => {
-                        this.categories = response.data;
+                        if (this.formMode === 'create') {
+                            this.products.push(response.data);
+                            alert('Product created successfully!');
+                        } else {
+                            const index = this.products.findIndex(product => product.id === this.currentProduct.id);
+                            this.products.splice(index, 1, response.data);
+                            window.location.reload();
+                            alert('Product updated successfully!');
+                        }
+                        this.closeModal();
                     })
                     .catch(error => {
-                        console.error('Error fetching categories:', error);
+                        console.error('Error saving product:', error);
+                    });
+            },
+
+            deleteProduct(product) {
+                axios.delete(`/api/products/${product.id}`)
+                    .then(response => {
+                        this.products = this.products.filter(prod => prod.id !== product.id);
+                        alert('Product deleted successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error deleting product:', error);
                     });
             },
             openCategoryModal(mode, category = null) {
@@ -484,6 +574,16 @@
                     id: null,
                     category_name: '',
                     description: ''
+                };
+            },
+            resetCurrentProduct() {
+                this.currentProduct = {
+                    id: null,
+                    product_name: '',
+                    category_id: '',
+                    price: 0,
+                    qty: 0,
+                    image: null
                 };
             },
             resetCurrentUser() {

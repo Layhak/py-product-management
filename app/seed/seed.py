@@ -1,5 +1,6 @@
 from app import db
 from app.models.category import Category
+from app.models.product import Product
 from app.models.role import Role
 from app.models.user import User
 
@@ -47,24 +48,51 @@ def seed_data(app):
 
             # Seed categories if they don't exist
             if Category.query.count() == 0:
-                category1 = Category(
+                food_category = Category(
                     category_name='Food',
-                    description='All things Food-related',
+                    description='All things food-related',
                     user_id=admin_user.id
                 )
-                category2 = Category(
+                drink_category = Category(
                     category_name='Drink',
-                    description='Lifestyle and daily living drinking product',
+                    description='All things drink-related',
                     user_id=admin_user.id
                 )
 
-                db.session.add(category1)
-                db.session.add(category2)
+                db.session.add(food_category)
+                db.session.add(drink_category)
 
                 db.session.commit()
                 print("Categories seeded successfully.")
             else:
                 print("Categories already exist. Skipping category seeding.")
+
+            # Seed products if they don't exist
+            if Product.query.count() == 0:
+                coca_cola = Product(
+                    product_name='Coca Cola',
+                    category_id=drink_category.id,
+                    user_id=admin_user.id,
+                    price=1.5,
+                    qty=100,
+                    image='coca.png'
+                )
+                burger = Product(
+                    product_name='Burger',
+                    category_id=food_category.id,
+                    user_id=admin_user.id,
+                    price=5.0,
+                    qty=50,
+                    image='burger.png'
+                )
+
+                db.session.add(coca_cola)
+                db.session.add(burger)
+
+                db.session.commit()
+                print("Products seeded successfully.")
+            else:
+                print("Products already exist. Skipping product seeding.")
 
         except Exception as e:
             db.session.rollback()

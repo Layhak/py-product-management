@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime
 
 from werkzeug.utils import secure_filename
@@ -7,7 +8,7 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')
 
 
-def save_image(file, username):
+def save_image(file):
     if file.filename == '':
         return None
 
@@ -20,10 +21,10 @@ def save_image(file, username):
         print("The upload folder has been created.")
 
     # Format the filename
-    username = username.replace(' ', '_').lower()
+    unique_id = uuid.uuid4()  # Generate a unique UUID
     name, ext = os.path.splitext(filename)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{username}-{timestamp}{ext}"
+    filename = f"{unique_id}-{timestamp}{ext}"
 
     # Save the file
     file.save(os.path.join(UPLOAD_FOLDER, filename))
