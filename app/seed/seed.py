@@ -26,7 +26,7 @@ def seed_data(app):
                     address="Phnom Penh",
                     role=admin_role
                 )
-                admin_user.set_password('admin')
+                admin_user.set_password('adminpassword')
 
                 normal_user = User(
                     name='Normal',
@@ -36,7 +36,7 @@ def seed_data(app):
                     address="Phnom Penh",
                     role=user_role
                 )
-                normal_user.set_password('normal')
+                normal_user.set_password('normalpassword')
 
                 db.session.add(admin_user)
                 db.session.add(normal_user)

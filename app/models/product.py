@@ -21,6 +21,7 @@ class Product(db.Model):
             'id': self.id,
             'product_name': self.product_name,
             'category_id': self.category_id,
+            'category_name': self.category.category_name if self.category else None,
             'user_id': self.user_id,
             'price': self.price,
             'qty': self.qty,

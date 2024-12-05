@@ -6,7 +6,7 @@
     <title>Login</title>
     <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet">
     <script defer src="{{ url_for('static', filename='js/alpine.js') }}"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body class="h-full">
@@ -34,7 +34,7 @@
                             <div class="mt-2">
                                 <input type="email" v-model="email"
                                        class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                       required>
+                                >
                                 <span v-if="errors.email" class="text-red-500 text-sm">[[ errors.email ]]</span>
                             </div>
                         </div>
@@ -45,7 +45,7 @@
                             <div class="mt-2">
                                 <input type="password" v-model="password"
                                        class="block w-full rounded-md border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                       required>
+                                >
                                 <span v-if="errors.password" class="text-red-500 text-sm">[[ errors.password ]]</span>
                             </div>
                         </div>
@@ -82,6 +82,7 @@
     </div>
 </div>
 
+
 <script>
     const {createApp} = Vue;
 
@@ -98,8 +99,39 @@
             }
         },
         methods: {
+            validateEmail() {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!this.email) {
+                    this.errors.email = 'Email is required.';
+                } else if (!emailPattern.test(this.email)) {
+                    this.errors.email = 'Invalid email format.';
+                } else {
+                    this.errors.email = '';
+                }
+            },
+            validatePassword() {
+                if (!this.password) {
+                    this.errors.password = 'Password is required.';
+                } else if (this.password.length < 6) {
+                    this.errors.password = 'Password must be at least 6 characters long.';
+                } else {
+                    this.errors.password = '';
+                }
+            },
             onLogin() {
-                this.errors = {email: '', password: ''}; // Reset errors
+                // Reset errors
+                this.errors = {email: '', password: ''};
+
+                // Validate inputs
+                this.validateEmail();
+                this.validatePassword();
+
+                // Check if there are any errors
+                if (this.errors.email || this.errors.password) {
+                    return; // Stop if there are validation errors
+                }
+
+                // Proceed with API call if inputs are valid
                 axios.post('/api/login', {
                     email: this.email,
                     password: this.password
